@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart } from 'chart.js';
+import { Chart as ChartJS } from 'chart.js';
 import 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { ChartOptions } from 'chart.js/auto';
 
-Chart.register(zoomPlugin);
+ChartJS.register(zoomPlugin);
 
 type GlucoseChartProps = {
   data: {
@@ -17,6 +17,36 @@ type GlucoseChartProps = {
 };
 
 const GlucoseChart: React.FC<GlucoseChartProps> = ({ data }) => {
+
+    const chartRef = useRef<any>(null);
+
+    useEffect(() => {
+      if (chartRef.current) {
+        console.log(chartRef.current);
+        console.log(data);
+        if (data.length > 0) {
+          const latestTimestamp = data[data.length - 4]?.timestamp;
+          console.log(latestTimestamp)
+          const oneDayAgo = new Date(
+            latestTimestamp.getTime() - 24 * 60 * 60 * 1000
+          );
+          console.log(oneDayAgo)
+
+          // Apply zoom using type assertion
+          chartRef.current.zoomScale("x", {
+            min: oneDayAgo,
+            max: latestTimestamp,
+          });
+        }
+      }
+    }, [data]);
+
+    const resetZoom = () => {
+      if (chartRef.current) {
+        chartRef.current.resetZoom(); // Calling resetZoom on the chart instance
+      }
+    };
+    
   const chartData = {
     labels: data.map(d => d.timestamp),
     datasets: [
@@ -65,24 +95,23 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data }) => {
     plugins: {
       zoom: {
         zoom: {
-          wheel: {
-            enabled: true,
-            speed: 0.01,
-          },
-          pinch: {
+          mode: 'x',
+          drag: {
             enabled: true,
           },
-          mode: "x", // Zoom on the x-axis
         },
         pan: {
-          enabled: true, // Enable panning
-          mode: "x", // Pan on the x-axis
+          enabled: false,
+          mode: "x",
         },
       },
     },
   };
 
-  return <Line data={chartData} options={options} />;
+  return (
+      <Line ref={chartRef} data={chartData} options={options} />
+  );
+
 };
 
 export default React.memo(GlucoseChart);
