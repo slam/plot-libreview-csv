@@ -41,12 +41,6 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data }) => {
       }
     }, [data]);
 
-    const resetZoom = () => {
-      if (chartRef.current) {
-        chartRef.current.resetZoom(); // Calling resetZoom on the chart instance
-      }
-    };
-    
   const chartData = {
     labels: data.map(d => d.timestamp),
     datasets: [
